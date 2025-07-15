@@ -1,0 +1,31 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:16
+    container_name: payrolldb
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_DB: payrolldb
+      POSTGRES_USER: payroll
+      POSTGRES_PASSWORD: secret
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+  employee-service:
+    build:
+      context: ./employee-service
+    ports:
+      - "8081:8081"
+    depends_on:
+      - postgres
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/payrolldb
+      SPRING_DATASOURCE_USERNAME: payroll
+      SPRING_DATASOURCE_PASSWORD: secret
+      SPRING_JPA_HIBERNATE_DDL_AUTO: update
+      SPRING_JPA_SHOW_SQL: "true"
+
+volumes:
+  pgdata:

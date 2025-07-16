@@ -2,11 +2,12 @@ package com.payrollsystem.employee_service.controller;
 
 import com.payrollsystem.employee_service.model.Employee;
 import com.payrollsystem.employee_service.service.EmployeeService;
-import org.springframework.beans.factory.annotation.Autowired;
+import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
+import java.net.URI;
 import java.util.List;
 
 @RestController
@@ -25,49 +26,37 @@ public class EmployeeController {
         return service.getAll();
     }
 
-    // Get employee by ID with explicit 404 handling
+    // Get employee by ID (throws NotFoundException if not found)
     @GetMapping("/{id}")
     public ResponseEntity<Employee> getById(@PathVariable Long id) {
-        return service.getById(id)
-                .map(ResponseEntity::ok)
-                .orElse(ResponseEntity.notFound().build());
+        Employee employee = service.getById(id);
+        return ResponseEntity.ok(employee);
     }
 
-    // Create new employee, return 201 Created with location header
+    // Create new employee
     @PostMapping
-    public ResponseEntity<Employee> create(@RequestBody Employee employee) {
+    public ResponseEntity<Employee> create(@Valid @RequestBody Employee employee) {
         Employee created = service.create(employee);
-        return ResponseEntity
-                .created( // builds 201 Created response with Location header
-                        // e.g. /employees/{id}
-                        ServletUriComponentsBuilder
-                                .fromCurrentRequest()
-                                .path("/{id}")
-                                .buildAndExpand(created.getId())
-                                .toUri()
-                )
-                .body(created);
+        URI location = ServletUriComponentsBuilder
+                .fromCurrentRequest()
+                .path("/{id}")
+                .buildAndExpand(created.getId())
+                .toUri();
+
+        return ResponseEntity.created(location).body(created);
     }
 
-    // Update employee by ID, return 200 or 404 if not found
+    // Update employee by ID
     @PutMapping("/{id}")
-    public ResponseEntity<Employee> update(@PathVariable Long id, @RequestBody Employee employee) {
-        return service.getById(id)
-                .map(existingEmployee -> {
-                    Employee updated = service.update(id, employee);
-                    return ResponseEntity.ok(updated);
-                })
-                .orElse(ResponseEntity.notFound().build());
+    public ResponseEntity<Employee> update(@PathVariable Long id,@Valid @RequestBody Employee employee) {
+        Employee updated = service.update(id, employee);
+        return ResponseEntity.ok(updated);
     }
 
-    // Delete employee by ID, return 204 or 404 if not found
+    // Delete employee by ID
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> delete(@PathVariable Long id) {
-        if (service.getById(id).isPresent()) {
-            service.delete(id);
-            return ResponseEntity.noContent().build();
-        } else {
-            return ResponseEntity.notFound().build();
-        }
+        service.delete(id);
+        return ResponseEntity.noContent().build();
     }
 }

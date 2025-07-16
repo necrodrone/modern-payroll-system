@@ -8,7 +8,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
-import java.util.Optional;
 
 @Service
 public class EmployeeService {
@@ -26,24 +25,31 @@ public class EmployeeService {
         return repository.findAll();
     }
 
-    public Optional<Employee> getById(Long id) {
+    public Employee getById(Long id) {
         logger.info("Fetching employee with id {}", id);
-        return repository.findById(id);
+        return repository.findById(id)
+                .orElseThrow(() -> new NotFoundException("Employee not found with id " + id));
     }
 
     public Employee create(Employee employee) {
-        logger.info("Creating new employee: {}", employee.getFirstName() + " " + employee.getLastName());
+        logger.info("Creating new employee: {} {}", employee.getFirstName(), employee.getLastName());
         return repository.save(employee);
     }
 
-    public Employee update(Long id, Employee employee) {
+    public Employee update(Long id, Employee updatedEmployee) {
         logger.info("Updating employee with id {}", id);
-        return repository.findById(id)
-                .map(existing -> {
-                    employee.setId(id);
-                    return repository.save(employee);
-                })
+        Employee existing = repository.findById(id)
                 .orElseThrow(() -> new NotFoundException("Employee not found with id " + id));
+
+        // Update only the fields
+        existing.setFirstName(updatedEmployee.getFirstName());
+        existing.setLastName(updatedEmployee.getLastName());
+        existing.setEmail(updatedEmployee.getEmail());
+        existing.setPosition(updatedEmployee.getPosition());
+        existing.setSalary(updatedEmployee.getSalary());
+        existing.setHiredDate(updatedEmployee.getHiredDate());
+
+        return repository.save(existing);
     }
 
     public void delete(Long id) {

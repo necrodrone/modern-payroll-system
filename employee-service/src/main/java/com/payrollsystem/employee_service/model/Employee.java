@@ -1,6 +1,8 @@
 package com.payrollsystem.employee_service.model;
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.*;
+
 import java.time.LocalDate;
 
 @Entity
@@ -10,11 +12,26 @@ public class Employee {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @NotBlank(message = "First name is required")
     private String firstName;
+
+    @NotBlank(message = "Last name is required")
     private String lastName;
+
+    @Email(message = "Email should be valid")
+    @NotBlank(message = "Email is required")
     private String email;
+
+    @NotBlank(message = "Position is required")
     private String position;
+
+    @NotNull(message = "Salary is required")
+    @Positive(message = "Salary must be positive")
+    @Digits(integer = 10, fraction = 2, message = "Salary must be a valid monetary amount with up to 10 digits and 2 decimals")
     private Double salary;
+
+    @NotNull(message = "Hired date is required")
+    @PastOrPresent(message = "Hired date cannot be in the future")
     private LocalDate hiredDate;
 
     // Getters and Setters

@@ -2,7 +2,6 @@ package com.payrollsystem.employee_service.service;
 
 import com.payrollsystem.employee_service.model.Employee;
 import com.payrollsystem.employee_service.repository.EmployeeRepository;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -11,8 +10,11 @@ import java.util.Optional;
 @Service
 public class EmployeeService {
 
-    @Autowired
-    private EmployeeRepository repository;
+    private final EmployeeRepository repository;
+
+    public EmployeeService(EmployeeRepository repository) {
+        this.repository = repository;
+    }
 
     public List<Employee> getAll() {
         return repository.findAll();

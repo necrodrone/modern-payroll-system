@@ -5,7 +5,7 @@ FROM eclipse-temurin:17-jre
 WORKDIR /app
 
 # Copy the jar file into the container
-COPY target/employee-service.jar app.jar
+COPY target/employee-service-0.0.1-SNAPSHOT.jar app.jar
 
 # Expose port your app runs on (default 8080 or 8081)
 EXPOSE 8081

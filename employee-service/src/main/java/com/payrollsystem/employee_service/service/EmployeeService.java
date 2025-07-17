@@ -5,6 +5,10 @@ import com.payrollsystem.employee_service.model.Employee;
 import com.payrollsystem.employee_service.repository.EmployeeRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -20,9 +24,17 @@ public class EmployeeService {
         this.repository = repository;
     }
 
-    public List<Employee> getAll() {
-        logger.info("Fetching all employees");
-        return repository.findAll();
+    public Page<Employee> getAll(String search, int page, int size, String sortBy, String sortDir) {
+        logger.info("Fetching employees (search={}, page={}, size={}, sortBy={}, sortDir={})", search, page, size, sortBy, sortDir);
+
+        Sort sort = sortDir.equalsIgnoreCase("desc") ? Sort.by(sortBy).descending() : Sort.by(sortBy).ascending();
+        Pageable pageable = PageRequest.of(page, size, sort);
+
+        if (search == null || search.trim().isEmpty()) {
+            return repository.findAll(pageable);
+        } else {
+            return repository.search(search.trim(), pageable);
+        }
     }
 
     public Employee getById(Long id) {

@@ -3,6 +3,7 @@ package com.payrollsystem.employee_service.model;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.*;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 
 @Entity
@@ -25,10 +26,11 @@ public class Employee {
     @NotBlank(message = "Position is required")
     private String position;
 
+    @Column(precision = 10, scale = 2)
+    @Digits(integer = 10, fraction = 2, message = "Salary must be a valid monetary amount with up to 10 digits and 2 decimals")
     @NotNull(message = "Salary is required")
     @Positive(message = "Salary must be positive")
-    @Digits(integer = 10, fraction = 2, message = "Salary must be a valid monetary amount with up to 10 digits and 2 decimals")
-    private Double salary;
+    private BigDecimal salary;
 
     @NotNull(message = "Hired date is required")
     @PastOrPresent(message = "Hired date cannot be in the future")
@@ -50,8 +52,8 @@ public class Employee {
     public String getPosition() { return position; }
     public void setPosition(String position) { this.position = position; }
 
-    public Double getSalary() { return salary; }
-    public void setSalary(Double salary) { this.salary = salary; }
+    public BigDecimal getSalary() { return salary; }
+    public void setSalary(BigDecimal salary) { this.salary = salary; }
 
     public LocalDate getHiredDate() { return hiredDate; }
     public void setHiredDate(LocalDate hiredDate) { this.hiredDate = hiredDate; }

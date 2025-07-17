@@ -3,6 +3,7 @@ package com.payrollsystem.employee_service.controller;
 import com.payrollsystem.employee_service.model.Employee;
 import com.payrollsystem.employee_service.service.EmployeeService;
 import jakarta.validation.Valid;
+import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
@@ -22,8 +23,15 @@ public class EmployeeController {
 
     // Get all employees
     @GetMapping
-    public List<Employee> getAll() {
-        return service.getAll();
+    public ResponseEntity<Page<Employee>> getAll(
+            @RequestParam(required = false) String search,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "id") String sortBy,
+            @RequestParam(defaultValue = "asc") String sortDir
+    ) {
+        Page<Employee> result = service.getAll(search, page, size, sortBy, sortDir);
+        return ResponseEntity.ok(result);
     }
 
     // Get employee by ID (throws NotFoundException if not found)

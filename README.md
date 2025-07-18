@@ -2,7 +2,10 @@
 
 This project is a microservices-based payroll system built with Spring Boot, PostgreSQL, RabbitMQ, and Docker.
 
+# API Documentation
+http://localhost:8081/api/swagger-ui/index.html#/
 
+# TODO
 ✅ Let’s set the structure. Here’s what I’ll help you with step by step:
 🔹 1. Service List & Responsibility
 auth-service: Login, roles, JWT tokens.

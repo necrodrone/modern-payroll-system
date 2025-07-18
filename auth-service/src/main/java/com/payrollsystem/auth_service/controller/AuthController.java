@@ -20,7 +20,7 @@ import org.springframework.web.bind.annotation.*;
  */
 @CrossOrigin(origins = "*", maxAge = 3600) // Allow cross-origin requests for development
 @RestController
-@RequestMapping("/auth")
+@RequestMapping("/api/auth")
 @Tag(name = "Authentication", description = "User registration and login APIs")
 public class AuthController {
 

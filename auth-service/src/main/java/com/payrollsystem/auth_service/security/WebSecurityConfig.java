@@ -107,7 +107,7 @@ public class WebSecurityConfig {
                 .authorizeHttpRequests(auth ->
                         auth.requestMatchers("/api/auth/**").permitAll() // Permit all requests to authentication endpoints
                                 .requestMatchers("/api/test/**").permitAll() // Permit all requests to test endpoints (optional for development)
-                                .requestMatchers("/swagger-ui/**", "/v3/api-docs/**", "/swagger-resources/**", "/webjars/**").permitAll() // Permit access to Swagger UI
+                                .requestMatchers("/swagger-ui/**", "/favicon.ico","/v3/api-docs/**", "/swagger-resources/**", "/webjars/**").permitAll() // Permit access to Swagger UI
                                 .anyRequest().authenticated() // Require authentication for all other requests
                 );
 

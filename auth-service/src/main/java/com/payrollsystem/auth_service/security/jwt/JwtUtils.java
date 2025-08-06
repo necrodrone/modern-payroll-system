@@ -1,89 +1,77 @@
 package com.payrollsystem.auth_service.security.jwt;
 
 import com.payrollsystem.auth_service.security.services.UserDetailsImpl;
-import io.jsonwebtoken.*;
-import io.jsonwebtoken.io.Decoders;
-import io.jsonwebtoken.security.Keys;
+import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.SignatureAlgorithm;
+import io.jsonwebtoken.MalformedJwtException;
+import io.jsonwebtoken.ExpiredJwtException;
+import io.jsonwebtoken.UnsupportedJwtException;
+import io.jsonwebtoken.security.SignatureException; // Use the correct SignatureException
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Component;
 
-import java.security.Key;
+import java.security.KeyPair;
+import java.security.interfaces.RSAPrivateKey;
+import java.security.interfaces.RSAPublicKey;
 import java.util.Date;
 
-/**
- * Utility class for JSON Web Token (JWT) operations.
- * Handles generation, validation, and parsing of JWTs.
- */
 @Component
 public class JwtUtils {
     private static final Logger logger = LoggerFactory.getLogger(JwtUtils.class);
 
-    /**
-     * JWT secret key obtained from application properties.
-     * This key is used for signing and verifying JWTs.
-     */
-    @Value("${auth.jwt.secret}")
-    private String jwtSecret;
+    // No more jwtSecret. We will use the key pair instead.
+    // @Value("${auth.jwt.secret}")
+    // private String jwtSecret;
 
-    /**
-     * JWT expiration time in milliseconds, obtained from application properties.
-     */
     @Value("${auth.jwt.expirationMs}")
     private int jwtExpirationMs;
 
-    /**
-     * Generates a secret key from the base64 encoded JWT secret string.
-     *
-     * @return The signing key.
-     */
-    private Key key() {
-        return Keys.hmacShaKeyFor(Decoders.BASE64.decode(jwtSecret));
+    // Autowire the KeyPair bean
+    private final KeyPair keyPair;
+
+    @Autowired
+    public JwtUtils(KeyPair keyPair) {
+        this.keyPair = keyPair;
     }
 
     /**
-     * Generates a JWT token for the authenticated user.
-     * The token contains the username as the subject, along with issuance and expiration dates.
-     *
-     * @param authentication The Spring Security Authentication object containing user details.
-     * @return The generated JWT token string.
+     * Generates a JWT token using the private key.
      */
     public String generateJwtToken(Authentication authentication) {
         UserDetailsImpl userPrincipal = (UserDetailsImpl) authentication.getPrincipal();
 
         return Jwts.builder()
-                .setSubject((userPrincipal.getUsername())) // Set username as subject
-                .setIssuedAt(new Date()) // Set token issuance time
-                .setExpiration(new Date((new Date()).getTime() + jwtExpirationMs)) // Set token expiration time
-                .signWith(key(), SignatureAlgorithm.HS256) // Sign the token with the secret key and HS256 algorithm
-                .compact(); // Build and compact the JWT into a string
+                .setSubject((userPrincipal.getUsername()))
+                .setIssuedAt(new Date())
+                .setExpiration(new Date((new Date()).getTime() + jwtExpirationMs))
+                .signWith(keyPair.getPrivate(), SignatureAlgorithm.RS256) // Sign with the PRIVATE key
+                .compact();
     }
 
     /**
-     * Extracts the username from a JWT token.
-     *
-     * @param token The JWT token string.
-     * @return The username (subject) from the token.
+     * Extracts the username from a JWT token using the public key.
      */
     public String getUserNameFromJwtToken(String token) {
-        return Jwts.parserBuilder().setSigningKey(key()).build()
-                .parseClaimsJws(token).getBody().getSubject();
+        return Jwts.parserBuilder()
+                .setSigningKey(keyPair.getPublic()) // Use the PUBLIC key for parsing
+                .build()
+                .parseClaimsJws(token)
+                .getBody()
+                .getSubject();
     }
 
     /**
-     * Validates a JWT token.
-     * Checks for proper signing, expiration, and other common JWT issues.
-     *
-     * @param authToken The JWT token string to validate.
-     * @return True if the token is valid, false otherwise.
+     * Validates a JWT token using the public key.
      */
     public boolean validateJwtToken(String authToken) {
         try {
-            Jwts.parserBuilder().setSigningKey(key()).build().parse(authToken);
+            Jwts.parserBuilder().setSigningKey(keyPair.getPublic()).build().parseClaimsJws(authToken);
             return true;
-        } catch (io.jsonwebtoken.security.SignatureException e) {
+        } catch (SignatureException e) { // Use io.jsonwebtoken.security.SignatureException
             logger.error("Invalid JWT signature: {}", e.getMessage());
         } catch (MalformedJwtException e) {
             logger.error("Invalid JWT token: {}", e.getMessage());

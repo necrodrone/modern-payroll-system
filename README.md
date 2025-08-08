@@ -3,7 +3,8 @@
 This project is a microservices-based payroll system built with Spring Boot, PostgreSQL, RabbitMQ, and Docker.
 
 # API Documentation
-http://localhost:8081/api/swagger-ui/index.html#/
+http://localhost:8080/swagger-ui/index.html for Auth-service
+http://localhost:8081/api/swagger-ui/index.html for Employee-service
 
 # TODO
 ✅ Let’s set the structure. Here’s what I’ll help you with step by step:
@@ -20,7 +21,7 @@ payslip-service: Generates payslips and sends notifications.
 
 tax-service: Tax rules and computations (BIR, SSS, etc).
 
-notification-service: Emails and SMS.
+notification-service: Emails(RabbitMQ) and SMS(Twilio).
 
 scheduler-service: Cron jobs for payroll generation.
 

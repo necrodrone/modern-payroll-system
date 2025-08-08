@@ -3,6 +3,7 @@ package com.payrollsystem.employee_service.service;
 import com.payrollsystem.employee_service.exception.NotFoundException;
 import com.payrollsystem.employee_service.model.Employee;
 import com.payrollsystem.employee_service.repository.EmployeeRepository;
+import com.payrollsystem.employee_service.dto.EmployeeCreatedEvent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
@@ -10,6 +11,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
+
 
 import java.util.List;
 
@@ -19,9 +21,11 @@ public class EmployeeService {
     private static final Logger logger = LoggerFactory.getLogger(EmployeeService.class);
 
     private final EmployeeRepository repository;
+    private final RabbitMQProducer rabbitMQProducer;
 
-    public EmployeeService(EmployeeRepository repository) {
+    public EmployeeService(EmployeeRepository repository, RabbitMQProducer rabbitMQProducer) {
         this.repository = repository;
+        this.rabbitMQProducer = rabbitMQProducer;
     }
 
     public Page<Employee> getAll(String search, int page, int size, String sortBy, String sortDir) {
@@ -45,7 +49,22 @@ public class EmployeeService {
 
     public Employee create(Employee employee) {
         logger.info("Creating new employee: {} {}", employee.getFirstName(), employee.getLastName());
-        return repository.save(employee);
+
+        // 1. Save the employee to the database first
+        Employee savedEmployee = repository.save(employee);
+
+        // 2. Create the event DTO using the saved employee's details
+        EmployeeCreatedEvent event = new EmployeeCreatedEvent(
+                savedEmployee.getId(),
+                savedEmployee.getFirstName() + " " + savedEmployee.getLastName(),
+                savedEmployee.getEmail(),
+                savedEmployee.getPhoneNumber()
+        );
+
+        // 3. Publish the event to RabbitMQ
+        rabbitMQProducer.sendEmployeeCreatedEvent(event);
+
+        return savedEmployee;
     }
 
     public Employee update(Long id, Employee updatedEmployee) {

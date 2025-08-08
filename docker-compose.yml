@@ -13,11 +13,18 @@ services:
     volumes:
       - pgdata:/var/lib/postgresql/data
 
-  employee-service:
-    build:
-      context: ./employee-service
+  rabbitmq:
+    image: rabbitmq:3-management
+    container_name: rabbitmq
     ports:
-      - "8081:8081"
+      - "5672:5672"
+      - "15672:15672"
+
+  auth-service:
+    build:
+      context: ./auth-service
+    ports:
+      - "8083:8083"
     depends_on:
       - postgres
     environment:
@@ -26,6 +33,41 @@ services:
       SPRING_DATASOURCE_PASSWORD: secret
       SPRING_JPA_HIBERNATE_DDL_AUTO: update
       SPRING_JPA_SHOW_SQL: "true"
+      # JWT_SECRET: your_jwt_secret
+      # JWT_EXPIRATION_MS: 86400000
+
+  employee-service:
+    build:
+      context: ./employee-service
+    ports:
+      - "8081:8081"
+    depends_on:
+      - postgres
+      - rabbitmq
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/payrolldb
+      SPRING_DATASOURCE_USERNAME: payroll
+      SPRING_DATASOURCE_PASSWORD: secret
+      SPRING_JPA_HIBERNATE_DDL_AUTO: update
+      SPRING_JPA_SHOW_SQL: "true"
+      SPRING_RABBITMQ_HOST: rabbitmq
+      SPRING_RABBITMQ_PORT: 5672
+
+  notification-service:
+    build:
+      context: ./notification-service
+    ports:
+      - "8084:8084"
+    depends_on:
+      - rabbitmq
+    environment:
+      SPRING_RABBITMQ_HOST: rabbitmq
+      SPRING_RABBITMQ_PORT: 5672
+      # Add your Twilio and email credentials here
+      TWILIO_ACCOUNT_SID: your_account_sid
+      TWILIO_AUTH_TOKEN: your_auth_token
+      TWILIO_PHONE_NUMBER: your_twilio_phone_number
+      # e.g., SPRING_MAIL_HOST, SPRING_MAIL_USERNAME, etc.
 
 volumes:
   pgdata:

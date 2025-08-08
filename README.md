@@ -9,9 +9,9 @@ http://localhost:8081/api/swagger-ui/index.html for Employee-service
 # TODO
 
 🔹 1. Service List & Responsibility
-auth-service: Login, roles, JWT tokens.
+auth-service: Login, roles, JWT tokens. - ✅
 
-employee-service: Personal data, employment status.
+employee-service: Personal data, employment status. - ✅
 
 attendance-service: Time logs, leaves, shifts.
 
@@ -21,7 +21,7 @@ payslip-service: Generates payslips and sends notifications.
 
 tax-service: Tax rules and computations (BIR, SSS, etc).
 
-notification-service: Emails(RabbitMQ) and SMS(Twilio).
+notification-service: Emails(RabbitMQ) and SMS(Twilio). - ✅
 
 scheduler-service: Cron jobs for payroll generation.
 

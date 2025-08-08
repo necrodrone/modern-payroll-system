@@ -7,7 +7,7 @@ http://localhost:8080/swagger-ui/index.html for Auth-service
 http://localhost:8081/api/swagger-ui/index.html for Employee-service
 
 # TODO
-✅ Let’s set the structure. Here’s what I’ll help you with step by step:
+
 🔹 1. Service List & Responsibility
 auth-service: Login, roles, JWT tokens.
 

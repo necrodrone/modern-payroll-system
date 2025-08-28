@@ -13,5 +13,6 @@ public enum Role {
     /**
      * Administrator role with elevated permissions.
      */
-    ROLE_ADMIN
+    ROLE_ADMIN,
+    ROLE_SUPER_ADMIN
 }

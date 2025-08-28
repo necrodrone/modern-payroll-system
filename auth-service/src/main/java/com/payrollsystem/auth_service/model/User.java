@@ -63,6 +63,7 @@ public class User {
     @Enumerated(EnumType.STRING) // Store enum names as strings in the database
     private Set<Role> roles = new HashSet<>();
 
+    private boolean enabled = true;
     /**
      * Default constructor.
      */
@@ -125,6 +126,14 @@ public class User {
         this.roles = roles;
     }
 
+    public boolean isEnabled() {
+        return enabled;
+    }
+
+    public void setEnabled(boolean enabled) {
+        this.enabled = enabled;
+    }
+
     /**
      * Overrides toString for better logging and debugging.
      *
@@ -137,6 +146,7 @@ public class User {
                 ", username='" + username + '\'' +
                 ", email='" + email + '\'' +
                 ", roles=" + roles +
+                ", enabled=" + enabled +
                 '}';
     }
 }

@@ -101,20 +101,19 @@ public class WebSecurityConfig {
      */
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
-        http.csrf(AbstractHttpConfigurer::disable) // Disable CSRF as we are using stateless JWT
-                .exceptionHandling(exception -> exception.authenticationEntryPoint(unauthorizedHandler)) // Handle unauthorized access
-                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)) // Set session management to stateless
+        http.csrf(AbstractHttpConfigurer::disable)
+                .exceptionHandling(exception -> exception.authenticationEntryPoint(unauthorizedHandler))
+                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth ->
-                        auth.requestMatchers("/api/auth/**").permitAll() // Permit all requests to authentication endpoints
-                                .requestMatchers("/api/test/**").permitAll() // Permit all requests to test endpoints (optional for development)
-                                .requestMatchers("/swagger-ui/**", "/favicon.ico","/v3/api-docs/**", "/swagger-resources/**", "/webjars/**").permitAll() // Permit access to Swagger UI
-                                .anyRequest().authenticated() // Require authentication for all other requests
+                        auth.requestMatchers("/api/auth/public-key").permitAll() // 👈 allow public key endpoint
+                                .requestMatchers("/api/auth/signin").permitAll()
+                                .requestMatchers("/api/auth/signup").hasAnyRole("SUPER_ADMIN", "ADMIN")
+                                .requestMatchers("/api/test/**").permitAll()
+                                .requestMatchers("/swagger-ui/**", "/favicon.ico","/v3/api-docs/**", "/swagger-resources/**", "/webjars/**").permitAll()
+                                .anyRequest().authenticated()
                 );
 
-        // Add our custom authentication provider
         http.authenticationProvider(authenticationProvider());
-
-        // Add our custom JWT token filter before the Spring Security's UsernamePasswordAuthenticationFilter
         http.addFilterBefore(authenticationJwtTokenFilter(), UsernamePasswordAuthenticationFilter.class);
 
         return http.build();

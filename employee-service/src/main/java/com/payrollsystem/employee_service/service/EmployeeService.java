@@ -74,11 +74,19 @@ public class EmployeeService {
 
         // Update only the fields
         existing.setFirstName(updatedEmployee.getFirstName());
+        existing.setMiddleName(updatedEmployee.getMiddleName());
         existing.setLastName(updatedEmployee.getLastName());
         existing.setEmail(updatedEmployee.getEmail());
         existing.setPosition(updatedEmployee.getPosition());
+        existing.setPhoneNumber(updatedEmployee.getPhoneNumber());
         existing.setSalary(updatedEmployee.getSalary());
         existing.setHiredDate(updatedEmployee.getHiredDate());
+        existing.setAddress(updatedEmployee.getAddress());
+        existing.setDateOfBirth(updatedEmployee.getDateOfBirth());
+        existing.setSssNumber(updatedEmployee.getSssNumber());
+        existing.setPhilhealthNumber(updatedEmployee.getPhilhealthNumber());
+        existing.setPagibigNumber(updatedEmployee.getPagibigNumber());
+        existing.setGsisNumber(updatedEmployee.getGsisNumber());
 
         return repository.save(existing);
     }

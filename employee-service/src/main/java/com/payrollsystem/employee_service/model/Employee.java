@@ -18,6 +18,8 @@ public class Employee {
     @NotBlank(message = "First name is required")
     private String firstName;
 
+    private String middleName;
+
     @NotBlank(message = "Last name is required")
     private String lastName;
 
@@ -40,4 +42,24 @@ public class Employee {
     @NotNull(message = "Hired date is required")
     @PastOrPresent(message = "Hired date cannot be in the future")
     private LocalDate hiredDate;
+
+    @NotBlank(message = "Address is required")
+    private String address;
+
+    @NotNull(message = "Date of birth is required")
+    @Past(message = "Date of birth cannot be in the future")
+    private LocalDate dateOfBirth;
+
+    // --- fields for government contributions ---
+    @Pattern(regexp = "^$|^[0-9]{10}$", message = "SSS number must be 10 digits")
+    private String sssNumber;
+
+    @Pattern(regexp = "^$|^[0-9]{12}$", message = "PhilHealth number must be 12 digits")
+    private String philhealthNumber;
+
+    @Pattern(regexp = "^$|^[0-9]{12}$", message = "Pag-IBIG number must be 12 digits")
+    private String pagibigNumber;
+
+    @Pattern(regexp = "^$|^[0-9]{11}$", message = "GSIS number must be 11 digits")
+    private String gsisNumber;
 }

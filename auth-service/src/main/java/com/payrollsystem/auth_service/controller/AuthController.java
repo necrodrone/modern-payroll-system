@@ -29,11 +29,13 @@ public class AuthController {
 
     /**
      * Endpoint for user registration.
+     * This endpoint is restricted to users with ADMIN or SUPER_ADMIN roles.
      *
      * @param signUpRequest The DTO containing user registration details.
      * @return ResponseEntity with a success or error message.
      */
     @PostMapping("/signup")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN')")
     @Operation(summary = "Register a new user",
             description = "Creates a new user account with provided username, email, password, and optional roles.")
     public ResponseEntity<MessageResponse> registerUser(@Valid @RequestBody SignupRequest signUpRequest) {

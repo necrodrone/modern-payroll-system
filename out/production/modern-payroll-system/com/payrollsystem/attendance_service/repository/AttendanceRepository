@@ -1,0 +1,12 @@
+package com.payrollsystem.attendance_service.repository;
+
+import com.payrollsystem.attendance_service.model.Attendance;
+import org.springframework.data.jpa.repository.JpaRepository;
+
+import java.time.LocalDate;
+import java.util.List;
+
+public interface AttendanceRepository extends JpaRepository<Attendance, Long> {
+  List<Attendance> findByEmployeeId(Long employeeId);
+  List<Attendance> findByEmployeeIdAndDate(Long employeeId, LocalDate date);
+}

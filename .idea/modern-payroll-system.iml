@@ -22,5 +22,6 @@
     <orderEntry type="library" name="Maven: io.jsonwebtoken:jjwt-api:0.11.5" level="project" />
     <orderEntry type="library" name="Maven: org.slf4j:slf4j-api:2.0.13" level="project" />
     <orderEntry type="library" name="Maven: org.apache.tomcat.embed:tomcat-embed-core:10.1.42" level="project" />
+    <orderEntry type="library" name="Maven: org.springframework.data:spring-data-commons:3.5.1" level="project" />
   </component>
 </module>

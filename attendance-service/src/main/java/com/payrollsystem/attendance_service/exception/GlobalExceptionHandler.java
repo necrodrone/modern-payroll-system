@@ -1,8 +1,5 @@
 package com.payrollsystem.attendance_service.exception;
 
-import com.payrollsystem.attendance_service.exception.BadRequestException;
-import com.payrollsystem.attendance_service.exception.ConflictException;
-import com.payrollsystem.attendance_service.exception.InternalServerException;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -55,10 +52,17 @@ public class GlobalExceptionHandler {
                 validationErrors.put(error.getField(), error.getDefaultMessage())
         );
 
-        return buildErrorResponse(HttpStatus.BAD_REQUEST, validationErrors, request);
+        Map<String, Object> body = new LinkedHashMap<>();
+        body.put("timestamp", LocalDateTime.now());
+        body.put("status", HttpStatus.BAD_REQUEST.value());
+        body.put("error", HttpStatus.BAD_REQUEST.getReasonPhrase());
+        body.put("path", request.getRequestURI());
+        body.put("errors", validationErrors);
+
+        return new ResponseEntity<>(body, HttpStatus.BAD_REQUEST);
     }
 
-    // Catch-all
+    // Catch-all for any other exceptions
     @ExceptionHandler(Exception.class)
     public ResponseEntity<Object> handleOtherExceptions(Exception ex, HttpServletRequest request) {
         return buildErrorResponse(HttpStatus.INTERNAL_SERVER_ERROR, "Unexpected error: " + ex.getMessage(), request);

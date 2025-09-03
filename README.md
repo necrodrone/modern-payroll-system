@@ -5,6 +5,7 @@ This project is a microservices-based payroll system built with Spring Boot, Pos
 # API Documentation
 http://localhost:8080/swagger-ui/index.html for Auth-service
 http://localhost:8081/api/swagger-ui/index.html for Employee-service
+http://localhost:8082/api/swagger-ui/index.html for attendance-service
 
 # TODO
 

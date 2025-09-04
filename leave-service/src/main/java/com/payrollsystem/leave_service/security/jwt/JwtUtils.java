@@ -1,4 +1,4 @@
-package com.payrollsystem.attendance_service.security.jwt;
+package com.payrollsystem.leave_service.security.jwt;
 
 import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.Jwts;
@@ -14,7 +14,7 @@ import java.security.PublicKey;
 
 @Component
 public class JwtUtils {
-    private static final Logger logger = LoggerFactory.getLogger(com.payrollsystem.attendance_service.security.jwt.JwtUtils.class);
+    private static final Logger logger = LoggerFactory.getLogger(com.payrollsystem.leave_service.security.jwt.JwtUtils.class);
 
     // No more jwtSecret. We will use the public key instead.
     // @Value("${auth.jwt.secret}")

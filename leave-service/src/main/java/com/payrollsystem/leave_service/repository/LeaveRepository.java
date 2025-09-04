@@ -1,6 +1,6 @@
-package com.payrollsystem.attendance_service.repository;
+package com.payrollsystem.leave_service.repository;
 
-import com.payrollsystem.attendance_service.model.Leave;
+import com.payrollsystem.leave_service.model.Leave;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;

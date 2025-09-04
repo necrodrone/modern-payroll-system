@@ -1,7 +1,6 @@
-package com.payrollsystem.attendance_service.security.jwt;
+package com.payrollsystem.leave_service.security.jwt;
 
-import com.payrollsystem.attendance_service.security.jwt.JwtUtils;
-import com.payrollsystem.attendance_service.security.services.UserDetailsServiceImpl;
+import com.payrollsystem.leave_service.security.services.UserDetailsServiceImpl;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;

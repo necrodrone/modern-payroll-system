@@ -1,7 +1,7 @@
-package com.payrollsystem.attendance_service.dto;
+package com.payrollsystem.leave_service.dto;
 
-import com.payrollsystem.attendance_service.model.LeaveStatus;
-import com.payrollsystem.attendance_service.model.LeaveType;
+import com.payrollsystem.leave_service.model.LeaveStatus;
+import com.payrollsystem.leave_service.model.LeaveType;
 import jakarta.validation.constraints.FutureOrPresent;
 import jakarta.validation.constraints.NotNull;
 import lombok.Data;

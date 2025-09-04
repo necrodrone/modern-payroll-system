@@ -5,7 +5,8 @@ This project is a microservices-based payroll system built with Spring Boot, Pos
 # API Documentation
 http://localhost:8080/swagger-ui/index.html for Auth-service
 http://localhost:8081/api/swagger-ui/index.html for Employee-service
-http://localhost:8082/api/swagger-ui/index.html for attendance-service
+http://localhost:8082/api/swagger-ui/index.html for Attendance-service
+http://localhost:8083/api/swagger-ui/index.html for Leave-service
 
 # TODO
 
@@ -14,7 +15,9 @@ auth-service: Login, roles, JWT tokens. - ✅
 
 employee-service: Personal data, employment status. - ✅
 
-attendance-service: Time logs, leaves, shifts.
+attendance-service: Time logs, Shifts, Employee shifts. - ✅
+
+leave-service: Leaves, balances, requests, approvals. - (Leaves - ✅)
 
 payroll-service: Salary computation, deductions, bonuses.
 

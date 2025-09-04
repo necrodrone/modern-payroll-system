@@ -1,4 +1,4 @@
-package com.payrollsystem.attendance_service.model;
+package com.payrollsystem.leave_service.model;
 
 import jakarta.persistence.*;
 import jakarta.validation.constraints.FutureOrPresent;

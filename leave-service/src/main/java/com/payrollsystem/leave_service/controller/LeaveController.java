@@ -1,8 +1,8 @@
-package com.payrollsystem.attendance_service.controller;
+package com.payrollsystem.leave_service.controller;
 
-import com.payrollsystem.attendance_service.dto.LeaveRequestDto;
-import com.payrollsystem.attendance_service.model.Leave;
-import com.payrollsystem.attendance_service.service.LeaveService;
+import com.payrollsystem.leave_service.dto.LeaveRequestDto;
+import com.payrollsystem.leave_service.model.Leave;
+import com.payrollsystem.leave_service.service.LeaveService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;

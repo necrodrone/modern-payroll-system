@@ -105,6 +105,17 @@ public class LeaveService {
         return leaveRepository.save(existingLeave);
     }
 
+    public Leave updateLeaveStatus(Long id, LeaveStatus newStatus) {
+        Leave existingLeave = getLeaveById(id);
+
+        if (existingLeave.getStatus() != LeaveStatus.PENDING) {
+            throw new BadRequestException("Only PENDING leave requests can be updated.");
+        }
+
+        existingLeave.setStatus(newStatus);
+        return leaveRepository.save(existingLeave);
+    }
+
     public void deleteLeave(Long id) {
         if (!leaveRepository.existsById(id)) {
             throw new NotFoundException("Leave request not found with ID: " + id);

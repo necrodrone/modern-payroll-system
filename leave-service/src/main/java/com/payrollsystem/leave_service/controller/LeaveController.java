@@ -2,6 +2,7 @@ package com.payrollsystem.leave_service.controller;
 
 import com.payrollsystem.leave_service.dto.LeaveRequestDto;
 import com.payrollsystem.leave_service.model.Leave;
+import com.payrollsystem.leave_service.model.LeaveStatus;
 import com.payrollsystem.leave_service.service.LeaveService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -47,6 +48,24 @@ public class LeaveController {
                                                     @RequestHeader("Authorization") String authorizationHeader) {
         Leave updatedLeave = leaveService.updateLeaveRequest(id, leaveRequestDto, authorizationHeader);
         return new ResponseEntity<>(updatedLeave, HttpStatus.OK);
+    }
+
+    @PutMapping("/{id}/approve")
+    public ResponseEntity<Leave> approveLeaveRequest(@PathVariable Long id) {
+        Leave approvedLeave = leaveService.updateLeaveStatus(id, LeaveStatus.APPROVED);
+        return new ResponseEntity<>(approvedLeave, HttpStatus.OK);
+    }
+
+    @PutMapping("/{id}/reject")
+    public ResponseEntity<Leave> rejectLeaveRequest(@PathVariable Long id) {
+        Leave rejectedLeave = leaveService.updateLeaveStatus(id, LeaveStatus.REJECTED);
+        return new ResponseEntity<>(rejectedLeave, HttpStatus.OK);
+    }
+
+    @PutMapping("/{id}/cancel")
+    public ResponseEntity<Leave> cancelLeaveRequest(@PathVariable Long id) {
+        Leave canceledLeave = leaveService.updateLeaveStatus(id, LeaveStatus.CANCELED);
+        return new ResponseEntity<>(canceledLeave, HttpStatus.OK);
     }
 
     @DeleteMapping("/{id}")

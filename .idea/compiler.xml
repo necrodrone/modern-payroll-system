@@ -9,6 +9,7 @@
         <outputRelativeToContentRoot value="true" />
         <module name="leave-service" />
         <module name="auth-service" />
+        <module name="holiday-service" />
         <module name="notification-service" />
         <module name="attendance-service" />
         <module name="employee-service" />
@@ -20,6 +21,7 @@
       <module name="attendance-service" options="-parameters" />
       <module name="auth-service" options="-parameters" />
       <module name="employee-service" options="-parameters" />
+      <module name="holiday-service" options="-parameters" />
       <module name="leave-service" options="-parameters" />
       <module name="notification-service" options="-parameters" />
     </option>

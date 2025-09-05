@@ -1,6 +1,7 @@
 package com.payrollsystem.holiday_service.controller;
 
 import com.payrollsystem.holiday_service.dto.HolidayRequestDto;
+import com.payrollsystem.holiday_service.dto.NonWorkingDayDto;
 import com.payrollsystem.holiday_service.model.Holiday;
 import com.payrollsystem.holiday_service.service.HolidayService;
 import jakarta.validation.Valid;
@@ -8,6 +9,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import java.time.LocalDate;
 import java.util.List;
 
 @RestController
@@ -19,6 +21,14 @@ public class HolidayController {
     @Autowired
     public HolidayController(HolidayService holidayService) {
         this.holidayService = holidayService;
+    }
+
+    @GetMapping("/non-working-days")
+    public ResponseEntity<List<NonWorkingDayDto>> getNonWorkingDays(
+            @RequestParam LocalDate startDate,
+            @RequestParam LocalDate endDate) {
+        List<NonWorkingDayDto> nonWorkingDays = holidayService.getNonWorkingDays(startDate, endDate);
+        return new ResponseEntity<>(nonWorkingDays, HttpStatus.OK);
     }
 
     @PostMapping

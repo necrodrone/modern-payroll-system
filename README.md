@@ -7,6 +7,8 @@ http://localhost:8080/swagger-ui/index.html for Auth-service
 http://localhost:8081/api/swagger-ui/index.html for Employee-service
 http://localhost:8082/api/swagger-ui/index.html for Attendance-service
 http://localhost:8083/api/swagger-ui/index.html for Leave-service
+port:8084 for notification-service
+http://localhost:8085/api/swagger-ui/index.html for holiday-service
 
 # TODO
 

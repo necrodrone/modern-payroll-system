@@ -19,7 +19,7 @@ attendance-service: Time logs, Shifts, Employee shifts. - ✅
 
 leave-service: Leaves, balances, requests, approvals. - ✅
 
-holiday-service: Holidays, non-working days. 
+holiday-service: Holidays, Suspensions. 
 
 payroll-service: Salary computation, deductions, bonuses.
 

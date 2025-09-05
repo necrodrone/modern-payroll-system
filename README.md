@@ -17,7 +17,9 @@ employee-service: Personal data, employment status. - ✅
 
 attendance-service: Time logs, Shifts, Employee shifts. - ✅
 
-leave-service: Leaves, balances, requests, approvals. - (Leaves - ✅)
+leave-service: Leaves, balances, requests, approvals. - ✅
+
+holiday-service: Holidays, non-working days. 
 
 payroll-service: Salary computation, deductions, bonuses.
 

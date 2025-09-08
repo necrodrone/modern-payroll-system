@@ -1,14 +1,18 @@
 package com.payrollsystem.employee_service.model;
 
+import com.payrollsystem.employee_service.validation.AtLeastOneNotNull;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.*;
-import lombok.Data; // Import Lombok's @Data annotation
-
+import lombok.Data;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 
 @Entity
-@Data // This single annotation generates all getters, setters, equals, hashCode, and toString methods
+@Data
+@AtLeastOneNotNull(
+        fieldNames = {"hourlyRate", "dailyRate"},
+        message = "Either hourly rate or daily rate must be provided."
+)
 public class Employee {
 
     @Id
@@ -34,10 +38,14 @@ public class Employee {
     private String phoneNumber;
 
     @Column(precision = 10, scale = 2)
-    @Digits(integer = 10, fraction = 2, message = "Salary must be a valid monetary amount with up to 10 digits and 2 decimals")
-    @NotNull(message = "Salary is required")
-    @Positive(message = "Salary must be positive")
-    private BigDecimal salary;
+    @Digits(integer = 10, fraction = 2, message = "Hourly Rate must be a valid monetary amount with up to 10 digits and 2 decimals")
+    @Positive(message = "Hourly Rate must be positive")
+    private BigDecimal hourlyRate;
+
+    @Column(precision = 10, scale = 2)
+    @Digits(integer = 10, fraction = 2, message = "Daily Rate must be a valid monetary amount with up to 10 digits and 2 decimals")
+    @Positive(message = "Daily Rate must be positive")
+    private BigDecimal dailyRate;
 
     @NotNull(message = "Hired date is required")
     @PastOrPresent(message = "Hired date cannot be in the future")

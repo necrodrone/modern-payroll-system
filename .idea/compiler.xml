@@ -7,11 +7,12 @@
         <sourceOutputDir name="target/generated-sources/annotations" />
         <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
         <outputRelativeToContentRoot value="true" />
-        <module name="leave-service" />
         <module name="auth-service" />
+        <module name="payroll-service" />
+        <module name="attendance-service" />
+        <module name="leave-service" />
         <module name="holiday-service" />
         <module name="notification-service" />
-        <module name="attendance-service" />
         <module name="employee-service" />
       </profile>
     </annotationProcessing>
@@ -24,6 +25,7 @@
       <module name="holiday-service" options="-parameters" />
       <module name="leave-service" options="-parameters" />
       <module name="notification-service" options="-parameters" />
+      <module name="payroll-service" options="-parameters" />
     </option>
   </component>
 </project>

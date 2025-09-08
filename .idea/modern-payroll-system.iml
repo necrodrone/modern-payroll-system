@@ -9,6 +9,8 @@
       <sourceFolder url="file://$MODULE_DIR$/leave-service/src/main/resources" type="java-resource" />
       <sourceFolder url="file://$MODULE_DIR$/holiday-service/src/main/java" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/holiday-service/src/main/resources" type="java-resource" />
+      <sourceFolder url="file://$MODULE_DIR$/payroll-service/src/main/java" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/payroll-service/src/main/resources" type="java-resource" />
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />

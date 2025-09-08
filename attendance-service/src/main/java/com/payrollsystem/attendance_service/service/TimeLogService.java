@@ -1,5 +1,6 @@
 package com.payrollsystem.attendance_service.service;
 
+import com.payrollsystem.attendance_service.exception.BadRequestException;
 import com.payrollsystem.attendance_service.exception.NotFoundException;
 import com.payrollsystem.attendance_service.model.TimeLog;
 import com.payrollsystem.attendance_service.repository.TimeLogRepository;
@@ -56,6 +57,33 @@ public class TimeLogService {
 
     public List<TimeLog> getLogsByEmployee(Long employeeId) {
         return timeLogRepository.findByEmployeeId(employeeId);
+    }
+
+    /**
+     * Calculates the total hours worked by a specific employee
+     * within a given date range.
+     *
+     * @param employeeId The ID of the employee.
+     * @param startDate  The start date of the period.
+     * @param endDate    The end date of the period.
+     * @return The total hours worked as a double.
+     */
+    public double getTotalHoursWorked(Long employeeId, LocalDateTime startDate, LocalDateTime endDate) {
+        // Validate date range
+        if (endDate.isBefore(startDate)) {
+            throw new BadRequestException("End date cannot be before the start date.");
+        }
+
+        List<TimeLog> timeLogs = timeLogRepository.findByEmployeeIdAndTimeInBetween(employeeId, startDate, endDate);
+
+        double totalHours = 0.0;
+        for (TimeLog log : timeLogs) {
+            if (log.getTimeIn() != null && log.getTimeOut() != null) {
+                Duration duration = Duration.between(log.getTimeIn(), log.getTimeOut());
+                totalHours += duration.toMinutes() / 60.0;
+            }
+        }
+        return totalHours;
     }
 
     public void deleteTimeLog(Long timelogId) {

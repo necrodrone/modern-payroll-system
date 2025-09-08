@@ -10,6 +10,7 @@ http://localhost:8083/api/swagger-ui/index.html for Leave-service
 port:8084 for notification-service
 http://localhost:8085/api/swagger-ui/index.html for holiday-service
 http://localhost:8086/api/swagger-ui/index.html for payroll-service
+http://localhost:8087/api/swagger-ui/index.html for tax-service
 
 # TODO
 

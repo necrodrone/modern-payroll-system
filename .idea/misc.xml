@@ -11,6 +11,7 @@
         <option value="$PROJECT_DIR$/leave-service/pom.xml" />
         <option value="$PROJECT_DIR$/holiday-service/pom.xml" />
         <option value="$PROJECT_DIR$/payroll-service/pom.xml" />
+        <option value="$PROJECT_DIR$/tax-service/pom.xml" />
       </list>
     </option>
   </component>

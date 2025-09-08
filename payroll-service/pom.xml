@@ -13,7 +13,7 @@
 	<artifactId>payroll-service</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
 	<name>payroll-service</name>
-	<description>Payroll micro service for payroll system</description>
+	<description>Payroll microservice for payroll system</description>
 
 	<properties>
 		<java.version>17</java.version>

@@ -34,5 +34,10 @@
     <orderEntry type="library" name="Maven: jakarta.validation:jakarta.validation-api:3.0.2" level="project" />
     <orderEntry type="library" name="Maven: org.springframework:spring-webflux:6.2.8" level="project" />
     <orderEntry type="library" name="Maven: io.projectreactor:reactor-core:3.7.7" level="project" />
+    <orderEntry type="library" name="Maven: jakarta.annotation:jakarta.annotation-api:2.1.1" level="project" />
+    <orderEntry type="library" name="Maven: javax.annotation:javax.annotation-api:1.2" level="project" />
+    <orderEntry type="library" name="Maven: org.springframework.security:spring-security-oauth2-jose:6.5.3" level="project" />
+    <orderEntry type="library" name="Maven: org.springframework.security:spring-security-oauth2-jose:6.5.1" level="project" />
+    <orderEntry type="library" name="Maven: org.springframework.data:spring-data-relational:3.5.1" level="project" />
   </component>
 </module>

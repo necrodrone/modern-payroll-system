@@ -29,7 +29,7 @@ payroll-service: Salary computation, deductions, bonuses.
 
 payslip-service: Generates payslips and sends notifications.
 
-tax-service: Tax rules and computations (BIR, SSS, etc).
+tax-service: Tax rules and computations . - ✅
 
 notification-service: Emails(RabbitMQ) and SMS(Twilio). - ✅
 

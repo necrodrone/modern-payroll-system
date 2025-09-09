@@ -1,5 +1,6 @@
 package com.payrollsystem.payroll_service.service;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.payrollsystem.payroll_service.dto.PayrollRequestDto;
 import com.payrollsystem.payroll_service.exception.BadRequestException;
 import com.payrollsystem.payroll_service.exception.NotFoundException;
@@ -31,10 +32,11 @@ public class PayrollService {
     private final String attendanceServiceUri;
     private final String holidayServiceUri;
     private final String taxServiceUri;
+    private final String deductionsServiceUri;
 
     // Static nested classes for DTOs to improve type safety
     private record EmployeeDetailsDto(
-            Long employeeId,
+            @JsonProperty("id") Long employeeId,
             BigDecimal hourlyRate,
             BigDecimal dailyRate
     ) {}
@@ -61,12 +63,14 @@ public class PayrollService {
     public PayrollService(WebClient.Builder webClientBuilder,
                           PayrollRepository payrollRepository,
                           @Value("${service.employee.uri}") String employeeServiceUri,
+                          @Value("${service.deduction.uri}") String deductionsServiceUri,
                           @Value("${service.attendance.uri}") String attendanceServiceUri,
                           @Value("${service.holiday.uri}") String holidayServiceUri,
                           @Value("${service.tax.uri}") String taxServiceUri) {
         this.webClient = webClientBuilder.build();
         this.payrollRepository = payrollRepository;
         this.employeeServiceUri = employeeServiceUri;
+        this.deductionsServiceUri = deductionsServiceUri;
         this.attendanceServiceUri = attendanceServiceUri;
         this.holidayServiceUri = holidayServiceUri;
         this.taxServiceUri = taxServiceUri;
@@ -269,7 +273,7 @@ public class PayrollService {
     }
 
     private Mono<List<DeductionDto>> getDynamicDeductions(Long employeeId, String authorizationHeader) {
-        String uri = employeeServiceUri + employeeId + "/deductions";
+        String uri = deductionsServiceUri + "employee/" + employeeId;
         return webClient.get()
                 .uri(uri)
                 .header("Authorization", authorizationHeader)
@@ -286,9 +290,7 @@ public class PayrollService {
                 .retrieve()
                 .onStatus(status -> status.isError(), response -> handleServiceError(response, "Holiday"))
                 .bodyToFlux(HolidayDto.class)
-                .collectList()
-                .map(List::size)
-                .cast(Long.class);
+                .count();
     }
 
     public Flux<Payroll> getAllPayrolls() {

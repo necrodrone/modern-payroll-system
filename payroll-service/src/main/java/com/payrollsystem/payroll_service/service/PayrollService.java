@@ -32,6 +32,7 @@ public class PayrollService {
     private final String holidayServiceUri;
     private final String taxServiceUri;
     private final String deductionsServiceUri;
+    private final String leaveServiceUri; // New service URI for leaves
 
     // Static nested classes for DTOs
     private record EmployeeDetailsDto(
@@ -58,6 +59,15 @@ public class PayrollService {
             String date
     ) {}
 
+    private record LeaveDto(
+            Long id,
+            Long employeeId,
+            LocalDate startDate,
+            LocalDate endDate,
+            String leaveType,
+            String status
+    ) {}
+
     @Autowired
     public PayrollService(WebClient.Builder webClientBuilder,
                           PayrollRepository payrollRepository,
@@ -65,7 +75,8 @@ public class PayrollService {
                           @Value("${service.deduction.uri}") String deductionsServiceUri,
                           @Value("${service.attendance.uri}") String attendanceServiceUri,
                           @Value("${service.holiday.uri}") String holidayServiceUri,
-                          @Value("${service.tax.uri}") String taxServiceUri) {
+                          @Value("${service.tax.uri}") String taxServiceUri,
+                          @Value("${service.leave.uri}") String leaveServiceUri) {
         this.webClient = webClientBuilder.build();
         this.payrollRepository = payrollRepository;
         this.employeeServiceUri = employeeServiceUri;
@@ -73,6 +84,7 @@ public class PayrollService {
         this.attendanceServiceUri = attendanceServiceUri;
         this.holidayServiceUri = holidayServiceUri;
         this.taxServiceUri = taxServiceUri;
+        this.leaveServiceUri = leaveServiceUri;
     }
 
     public Mono<Payroll> calculatePayroll(PayrollRequestDto payrollRequestDto, String authorizationHeader) {
@@ -96,15 +108,23 @@ public class PayrollService {
                     Mono<List<DeductionDto>> dynamicDeductionsMono = getDynamicDeductions(employeeDetails.employeeId(), authorizationHeader);
                     Mono<Long> nonWorkingDaysMono = getNonWorkingDays(payrollRequestDto.getPayPeriodStartDate(), payrollRequestDto.getPayPeriodEndDate());
                     Mono<List<TaxBracketDto>> taxBracketsMono = getTaxBrackets(authorizationHeader);
+                    Mono<List<LeaveDto>> leavesMono = getLeaves(employeeDetails.employeeId(), payrollRequestDto.getPayPeriodStartDate(), payrollRequestDto.getPayPeriodEndDate(), authorizationHeader);
 
-                    return Mono.zip(dynamicDeductionsMono, nonWorkingDaysMono, taxBracketsMono)
+                    return Mono.zip(dynamicDeductionsMono, nonWorkingDaysMono, taxBracketsMono, leavesMono)
                             .map(innerTuple -> {
                                 List<DeductionDto> deductions = innerTuple.getT1();
                                 long nonWorkingDays = innerTuple.getT2();
                                 List<TaxBracketDto> taxBrackets = innerTuple.getT3();
+                                List<LeaveDto> leaves = innerTuple.getT4();
 
-                                BigDecimal grossPay = calculateGrossPay(employeeDetails, totalHoursWorked, nonWorkingDays,
-                                        payrollRequestDto.getPayPeriodStartDate(), payrollRequestDto.getPayPeriodEndDate());
+                                BigDecimal grossPay = calculateGrossPay(
+                                        employeeDetails,
+                                        totalHoursWorked,
+                                        nonWorkingDays,
+                                        payrollRequestDto.getPayPeriodStartDate(),
+                                        payrollRequestDto.getPayPeriodEndDate(),
+                                        leaves
+                                );
                                 BigDecimal dynamicDeductions = calculateDynamicDeductions(deductions, payrollRequestDto.getPayPeriodStartDate(), payrollRequestDto.getPayPeriodEndDate());
                                 BigDecimal totalTaxes = calculateTaxes(grossPay, payrollRequestDto.getPayPeriodStartDate(), payrollRequestDto.getPayPeriodEndDate(), taxBrackets);
                                 BigDecimal totalDeductions = dynamicDeductions.add(totalTaxes);
@@ -127,13 +147,28 @@ public class PayrollService {
                 .switchIfEmpty(Mono.error(new IllegalStateException("Failed to create payroll record.")));
     }
 
-    private BigDecimal calculateGrossPay(EmployeeDetailsDto employeeDetails, Integer totalHoursWorked, long nonWorkingDays, LocalDate startDate, LocalDate endDate) {
+    private BigDecimal calculateGrossPay(EmployeeDetailsDto employeeDetails, Integer totalHoursWorked, long nonWorkingDays, LocalDate startDate, LocalDate endDate, List<LeaveDto> leaves) {
+        long paidLeaveDays = leaves.stream()
+                .filter(leave -> "PAID".equalsIgnoreCase(leave.status()))
+                .filter(leave -> !leave.startDate().isAfter(endDate) && !leave.endDate().isBefore(startDate))
+                .mapToLong(leave -> {
+                    LocalDate effectiveStartDate = leave.startDate().isBefore(startDate) ? startDate : leave.startDate();
+                    LocalDate effectiveEndDate = leave.endDate().isAfter(endDate) ? endDate : leave.endDate();
+                    return ChronoUnit.DAYS.between(effectiveStartDate, effectiveEndDate) + 1;
+                })
+                .sum();
+
         if (employeeDetails.hourlyRate() != null) {
-            return employeeDetails.hourlyRate().multiply(BigDecimal.valueOf(totalHoursWorked));
+            // Assume 8 hours per paid leave day for hourly employees
+            BigDecimal totalPaidLeaveHours = BigDecimal.valueOf(paidLeaveDays * 8);
+            BigDecimal totalHours = BigDecimal.valueOf(totalHoursWorked).add(totalPaidLeaveHours);
+            return employeeDetails.hourlyRate().multiply(totalHours);
         } else if (employeeDetails.dailyRate() != null) {
             long totalDaysInPeriod = ChronoUnit.DAYS.between(startDate, endDate) + 1;
             long workingDaysInPeriod = totalDaysInPeriod - nonWorkingDays;
-            return employeeDetails.dailyRate().multiply(BigDecimal.valueOf(workingDaysInPeriod));
+            // Paid leave days count as working days for daily rate employees
+            long grossPayDays = workingDaysInPeriod;
+            return employeeDetails.dailyRate().multiply(BigDecimal.valueOf(grossPayDays));
         } else {
             throw new BadRequestException("Employee must have either an hourly or daily rate set.");
         }
@@ -250,6 +285,17 @@ public class PayrollService {
                 .retrieve()
                 .onStatus(status -> status.isError(), response -> handleServiceError(response, "Employee deduction"))
                 .bodyToFlux(DeductionDto.class)
+                .collectList();
+    }
+
+    private Mono<List<LeaveDto>> getLeaves(Long employeeId, LocalDate startDate, LocalDate endDate, String authorizationHeader) {
+        String uri = String.format("%s/employee/%d/approved?startDate=%s&endDate=%s", leaveServiceUri, employeeId, startDate, endDate);
+        return webClient.get()
+                .uri(uri)
+                .header("Authorization", authorizationHeader)
+                .retrieve()
+                .onStatus(status -> status.isError(), response -> handleServiceError(response, "Leave"))
+                .bodyToFlux(LeaveDto.class)
                 .collectList();
     }
 

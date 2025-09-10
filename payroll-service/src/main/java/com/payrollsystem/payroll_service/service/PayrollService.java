@@ -21,7 +21,6 @@ import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
 import java.util.Comparator;
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Service
 public class PayrollService {
@@ -34,7 +33,7 @@ public class PayrollService {
     private final String taxServiceUri;
     private final String deductionsServiceUri;
 
-    // Static nested classes for DTOs to improve type safety
+    // Static nested classes for DTOs
     private record EmployeeDetailsDto(
             @JsonProperty("id") Long employeeId,
             BigDecimal hourlyRate,
@@ -42,10 +41,10 @@ public class PayrollService {
     ) {}
 
     private record TaxBracketDto(
-            BigDecimal minIncome,
-            BigDecimal maxIncome,
-            BigDecimal rate,
-            BigDecimal taxOnPreviousBracket
+            @JsonProperty("amountFrom") BigDecimal minIncome,
+            @JsonProperty("amountTo") BigDecimal maxIncome,
+            @JsonProperty("taxPercentage") BigDecimal rate,
+            @JsonProperty("flatDeduction") BigDecimal taxOnPreviousBracket
     ) {}
 
     private record DeductionDto(
@@ -76,21 +75,11 @@ public class PayrollService {
         this.taxServiceUri = taxServiceUri;
     }
 
-    /**
-     * Calculates payroll in a reactive, non-blocking manner.
-     * The method chains multiple non-blocking service calls to compute the final payroll.
-     *
-     * @param payrollRequestDto The DTO containing the employee and pay period information.
-     * @param authorizationHeader The authorization header for securing service calls.
-     * @return A Mono<Payroll> representing the asynchronous result of the payroll calculation.
-     */
     public Mono<Payroll> calculatePayroll(PayrollRequestDto payrollRequestDto, String authorizationHeader) {
-        // 1. Validate the pay period
         if (payrollRequestDto.getPayPeriodEndDate().isBefore(payrollRequestDto.getPayPeriodStartDate())) {
             return Mono.error(new BadRequestException("Pay period end date cannot be before start date."));
         }
 
-        // Use Mono.zip to make concurrent calls for employee details and hours worked
         Mono<EmployeeDetailsDto> employeeDetailsMono = getEmployeeDetails(payrollRequestDto.getEmployeeId(), authorizationHeader);
         Mono<Integer> hoursWorkedMono = getTotalHoursWorked(
                 payrollRequestDto.getEmployeeId(),
@@ -99,13 +88,11 @@ public class PayrollService {
                 authorizationHeader
         );
 
-        // Chain the asynchronous calls using flatMap
         return Mono.zip(employeeDetailsMono, hoursWorkedMono)
                 .flatMap(tuple -> {
                     EmployeeDetailsDto employeeDetails = tuple.getT1();
                     Integer totalHoursWorked = tuple.getT2();
 
-                    // Now get non-working days and dynamic deductions, also concurrently
                     Mono<List<DeductionDto>> dynamicDeductionsMono = getDynamicDeductions(employeeDetails.employeeId(), authorizationHeader);
                     Mono<Long> nonWorkingDaysMono = getNonWorkingDays(payrollRequestDto.getPayPeriodStartDate(), payrollRequestDto.getPayPeriodEndDate());
                     Mono<List<TaxBracketDto>> taxBracketsMono = getTaxBrackets(authorizationHeader);
@@ -116,7 +103,6 @@ public class PayrollService {
                                 long nonWorkingDays = innerTuple.getT2();
                                 List<TaxBracketDto> taxBrackets = innerTuple.getT3();
 
-                                // Perform all calculations once all data is available
                                 BigDecimal grossPay = calculateGrossPay(employeeDetails, totalHoursWorked, nonWorkingDays,
                                         payrollRequestDto.getPayPeriodStartDate(), payrollRequestDto.getPayPeriodEndDate());
                                 BigDecimal dynamicDeductions = calculateDynamicDeductions(deductions, payrollRequestDto.getPayPeriodStartDate(), payrollRequestDto.getPayPeriodEndDate());
@@ -124,7 +110,6 @@ public class PayrollService {
                                 BigDecimal totalDeductions = dynamicDeductions.add(totalTaxes);
                                 BigDecimal netPay = grossPay.subtract(totalDeductions);
 
-                                // Create the Payroll object
                                 Payroll payroll = new Payroll();
                                 payroll.setEmployeeId(payrollRequestDto.getEmployeeId());
                                 payroll.setPayPeriodStartDate(payrollRequestDto.getPayPeriodStartDate());
@@ -142,8 +127,6 @@ public class PayrollService {
                 .switchIfEmpty(Mono.error(new IllegalStateException("Failed to create payroll record.")));
     }
 
-    // --- Private helper methods for calculations ---
-
     private BigDecimal calculateGrossPay(EmployeeDetailsDto employeeDetails, Integer totalHoursWorked, long nonWorkingDays, LocalDate startDate, LocalDate endDate) {
         if (employeeDetails.hourlyRate() != null) {
             return employeeDetails.hourlyRate().multiply(BigDecimal.valueOf(totalHoursWorked));
@@ -156,41 +139,35 @@ public class PayrollService {
         }
     }
 
-    /**
-     * Calculates tax based on dynamically fetched tax brackets.
-     * @param grossPay The employee's gross pay for the period.
-     * @param taxBrackets The list of tax bracket DTOs.
-     * @return The total calculated tax.
-     */
     private BigDecimal calculateTaxes(BigDecimal grossPay, LocalDate startDate, LocalDate endDate, List<TaxBracketDto> taxBrackets) {
-        // Step 1: Project the pay period's gross pay to an annual equivalent
         long daysInPayPeriod = ChronoUnit.DAYS.between(startDate, endDate) + 1;
         BigDecimal periodsInYear = new BigDecimal("365").divide(BigDecimal.valueOf(daysInPayPeriod), 2, RoundingMode.HALF_UP);
         BigDecimal annualGrossPay = grossPay.multiply(periodsInYear);
 
-        // Step 2: Calculate the total annual tax
         BigDecimal annualTax = BigDecimal.ZERO;
-        // Sort the brackets by minIncome to ensure correct processing
-        taxBrackets.sort(Comparator.comparing(TaxBracketDto::minIncome));
+
+        // Sort safely, treating null minIncome as 0
+        taxBrackets.sort(Comparator.comparing(b -> b.minIncome() == null ? BigDecimal.ZERO : b.minIncome()));
 
         for (TaxBracketDto bracket : taxBrackets) {
-            if (annualGrossPay.compareTo(bracket.minIncome()) > 0) {
-                // If annualGrossPay is within the current bracket
-                if (annualGrossPay.compareTo(bracket.maxIncome()) <= 0) {
-                    BigDecimal taxableAmountInBracket = annualGrossPay.subtract(bracket.minIncome());
-                    annualTax = bracket.taxOnPreviousBracket().add(taxableAmountInBracket.multiply(bracket.rate()));
+            BigDecimal min = bracket.minIncome() == null ? BigDecimal.ZERO : bracket.minIncome();
+            BigDecimal max = bracket.maxIncome() == null ? new BigDecimal("999999999") : bracket.maxIncome();
+            BigDecimal rate = bracket.rate() == null ? BigDecimal.ZERO : bracket.rate();
+            BigDecimal baseTax = bracket.taxOnPreviousBracket() == null ? BigDecimal.ZERO : bracket.taxOnPreviousBracket();
+
+            if (annualGrossPay.compareTo(min) > 0) {
+                if (annualGrossPay.compareTo(max) <= 0) {
+                    BigDecimal taxableAmountInBracket = annualGrossPay.subtract(min);
+                    annualTax = baseTax.add(taxableAmountInBracket.multiply(rate));
                     break;
                 } else {
-                    // This is the last applicable bracket, add the full tax from it
-                    annualTax = bracket.taxOnPreviousBracket().add(bracket.maxIncome().subtract(bracket.minIncome()).multiply(bracket.rate()));
+                    annualTax = baseTax.add(max.subtract(min).multiply(rate));
                 }
             } else {
-                // Annual gross pay is less than the current bracket's minimum, so no more tax applies.
                 break;
             }
         }
 
-        // Step 3: Prorate the annual tax back to the current pay period
         BigDecimal payPeriodTax = annualTax.divide(periodsInYear, 2, RoundingMode.HALF_UP);
         return payPeriodTax.setScale(2, RoundingMode.HALF_UP);
     }
@@ -202,22 +179,25 @@ public class PayrollService {
             boolean isFirstHalf = endDate.isBefore(midpoint) || endDate.isEqual(midpoint);
 
             for (DeductionDto deduction : deductions) {
-                boolean isActive = !(startDate.isAfter(deduction.endDate()) || endDate.isBefore(deduction.startDate()));
+                boolean isActive = !( (deduction.endDate() != null && startDate.isAfter(deduction.endDate()))
+                        || endDate.isBefore(deduction.startDate()) );
+
                 if (isActive) {
                     switch (deduction.frequency()) {
-                        case "FIRST_HALF":
+                        case "FIRST_HALF" -> {
                             if (isFirstHalf) {
                                 totalDynamicDeductions = totalDynamicDeductions.add(deduction.amount());
                             }
-                            break;
-                        case "SECOND_HALF":
+                        }
+                        case "SECOND_HALF" -> {
                             if (!isFirstHalf) {
                                 totalDynamicDeductions = totalDynamicDeductions.add(deduction.amount());
                             }
-                            break;
-                        case "BI_MONTHLY":
-                            totalDynamicDeductions = totalDynamicDeductions.add(deduction.amount().divide(new BigDecimal("2"), 2, RoundingMode.HALF_UP));
-                            break;
+                        }
+                        case "BI_MONTHLY" ->
+                                totalDynamicDeductions = totalDynamicDeductions.add(
+                                        deduction.amount().divide(new BigDecimal("2"), 2, RoundingMode.HALF_UP)
+                                );
                     }
                 }
             }
@@ -225,20 +205,10 @@ public class PayrollService {
         return totalDynamicDeductions;
     }
 
-    /**
-     * Handles WebClient errors by retrieving the error body and wrapping it in a RuntimeException.
-     *
-     * @param response The ClientResponse with an error status.
-     * @param serviceName The name of the service that returned the error.
-     * @return A Mono that will emit a RuntimeException.
-     */
     private static Mono<? extends Throwable> handleServiceError(ClientResponse response, String serviceName) {
         return response.bodyToMono(String.class)
                 .flatMap(errorBody -> Mono.error(new RuntimeException(serviceName + " service error: " + errorBody)));
     }
-
-
-    // --- Private helper methods for inter-service communication ---
 
     private Mono<EmployeeDetailsDto> getEmployeeDetails(Long employeeId, String authorizationHeader) {
         String uri = employeeServiceUri + employeeId;

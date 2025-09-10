@@ -1,6 +1,7 @@
 package com.payrollsystem.leave_service.repository;
 
 import com.payrollsystem.leave_service.model.Leave;
+import com.payrollsystem.leave_service.model.LeaveStatus;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -18,6 +19,12 @@ public interface LeaveRepository extends JpaRepository<Leave, Long> {
 
     // Custom query to find all leave requests for a specific employee
     List<Leave> findByEmployeeId(Long employeeId);
+
+    // Custom query to find leaves that overlap with a given date range for a specific employee
+    List<Leave> findByEmployeeIdAndStartDateLessThanEqualAndEndDateGreaterThanEqual(Long employeeId, LocalDate endDate, LocalDate startDate);
+
+    // Custom query to find leaves that overlap with a given date range for a specific employee and status
+    List<Leave> findByEmployeeIdAndStatusAndStartDateLessThanEqualAndEndDateGreaterThanEqual(Long employeeId, LeaveStatus status, LocalDate endDate, LocalDate startDate);
 
     // Custom query to check for overlapping leave requests for an employee
     // It returns true if an existing leave request overlaps with the given date range.

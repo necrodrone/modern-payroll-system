@@ -15,6 +15,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Objects;
 
@@ -69,6 +70,14 @@ public class LeaveService {
     public Leave getLeaveById(Long id) {
         return leaveRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException("Leave request not found with ID: " + id));
+    }
+
+    public List<Leave> getLeavesByEmployeeIdAndDateRange(Long employeeId, LocalDate startDate, LocalDate endDate) {
+        return leaveRepository.findByEmployeeIdAndStartDateLessThanEqualAndEndDateGreaterThanEqual(employeeId, endDate, startDate);
+    }
+
+    public List<Leave> getApprovedLeavesByEmployeeIdAndDateRange(Long employeeId, LocalDate startDate, LocalDate endDate) {
+        return leaveRepository.findByEmployeeIdAndStatusAndStartDateLessThanEqualAndEndDateGreaterThanEqual(employeeId, LeaveStatus.APPROVED, endDate, startDate);
     }
 
     public Leave updateLeaveRequest(Long id, LeaveRequestDto leaveRequestDto, String authorizationHeader) {

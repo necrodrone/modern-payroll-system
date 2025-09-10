@@ -10,6 +10,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDate;
 import java.util.List;
 
 @RestController
@@ -40,6 +41,22 @@ public class LeaveController {
     public ResponseEntity<Leave> getLeaveById(@PathVariable Long id) {
         Leave leave = leaveService.getLeaveById(id);
         return new ResponseEntity<>(leave, HttpStatus.OK);
+    }
+
+    @GetMapping("/employee/{employeeId}")
+    public ResponseEntity<List<Leave>> getLeavesByEmployeeIdAndDateRange(@PathVariable Long employeeId,
+                                                                         @RequestParam LocalDate startDate,
+                                                                         @RequestParam LocalDate endDate) {
+        List<Leave> leaves = leaveService.getLeavesByEmployeeIdAndDateRange(employeeId, startDate, endDate);
+        return new ResponseEntity<>(leaves, HttpStatus.OK);
+    }
+
+    @GetMapping("/employee/{employeeId}/approved")
+    public ResponseEntity<List<Leave>> getApprovedLeavesByEmployeeIdAndDateRange(@PathVariable Long employeeId,
+                                                                                 @RequestParam LocalDate startDate,
+                                                                                 @RequestParam LocalDate endDate) {
+        List<Leave> leaves = leaveService.getApprovedLeavesByEmployeeIdAndDateRange(employeeId, startDate, endDate);
+        return new ResponseEntity<>(leaves, HttpStatus.OK);
     }
 
     @PutMapping("/{id}")

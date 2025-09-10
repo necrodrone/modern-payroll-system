@@ -26,7 +26,7 @@ public class DeductionRequestDto {
     @NotNull(message = "Start date is required")
     private LocalDate startDate;
 
-    @NotNull(message = "End date is required")
+//    @NotNull(message = "End date is required") The @NotNull annotation has been removed to make this field optional.
     private LocalDate endDate;
 
     @NotNull(message = "Deduction frequency is required")

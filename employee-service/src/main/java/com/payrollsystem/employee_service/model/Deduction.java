@@ -36,7 +36,7 @@ public class Deduction {
     @PastOrPresent(message = "Start date cannot be in the future")
     private LocalDate startDate;
 
-    @NotNull(message = "End date is required")
+//    @NotNull(message = "End date is required") The @NotNull annotation has been removed to make this field optional.
     private LocalDate endDate;
 
     @NotNull(message = "Deduction frequency is required")

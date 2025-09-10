@@ -33,8 +33,8 @@ public class DeductionService {
             throw new NotFoundException("Employee not found with ID: " + deductionRequestDto.getEmployeeId());
         }
 
-        // Validate that the start date is not after the end date
-        if (deductionRequestDto.getStartDate().isAfter(deductionRequestDto.getEndDate())) {
+        // Validate that the start date is not after the end date, only if an end date is provided.
+        if (deductionRequestDto.getEndDate() != null && deductionRequestDto.getStartDate().isAfter(deductionRequestDto.getEndDate())) {
             throw new BadRequestException("End date cannot be before start date.");
         }
 
@@ -91,8 +91,8 @@ public class DeductionService {
         Deduction existingDeduction = deductionRepository.findById(deductionId)
                 .orElseThrow(() -> new NotFoundException("Deduction not found with ID: " + deductionId));
 
-        // Validate that the start date is not after the end date
-        if (updatedDeductionDto.getStartDate().isAfter(updatedDeductionDto.getEndDate())) {
+        // Validate that the start date is not after the end date, only if an end date is provided.
+        if (updatedDeductionDto.getEndDate() != null && updatedDeductionDto.getStartDate().isAfter(updatedDeductionDto.getEndDate())) {
             throw new BadRequestException("End date cannot be before start date.");
         }
 

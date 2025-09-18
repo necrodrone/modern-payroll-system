@@ -25,9 +25,11 @@ leave-service: Leaves, balances, requests, approvals. - ✅
 
 holiday-service: Holidays, Suspensions, Non-working Days. - ✅ 
 
-payroll-service: Salary computation, deductions, bonuses.
+payroll-service: Salary computation, deductions, bonuses. - ✅ (no overtimes yet)
 
 payslip-service: Generates payslips and sends notifications.
+
+overtime-service: Handle Overtimes.
 
 tax-service: Tax rules and computations . - ✅
 

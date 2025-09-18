@@ -38,7 +38,10 @@ public class PayrollService {
     private record EmployeeDetailsDto(
             @JsonProperty("id") Long employeeId,
             BigDecimal hourlyRate,
-            BigDecimal dailyRate
+            BigDecimal dailyRate,
+            BigDecimal weeklyRate,
+            BigDecimal monthlyRate,
+            BigDecimal yearlyRate
     ) {}
 
     private record TaxBracketDto(
@@ -56,7 +59,9 @@ public class PayrollService {
     ) {}
 
     private record HolidayDto(
-            String date
+            @JsonProperty("date") LocalDate date,
+            @JsonProperty("name") String name,
+            @JsonProperty("type") String type
     ) {}
 
     private record LeaveDto(
@@ -106,7 +111,7 @@ public class PayrollService {
                     Integer totalHoursWorked = tuple.getT2();
 
                     Mono<List<DeductionDto>> dynamicDeductionsMono = getDynamicDeductions(employeeDetails.employeeId(), authorizationHeader);
-                    Mono<Long> nonWorkingDaysMono = getNonWorkingDays(payrollRequestDto.getPayPeriodStartDate(), payrollRequestDto.getPayPeriodEndDate());
+                    Mono<Long> nonWorkingDaysMono = getNonWorkingDays(payrollRequestDto.getPayPeriodStartDate(), payrollRequestDto.getPayPeriodEndDate(), authorizationHeader);
                     Mono<List<TaxBracketDto>> taxBracketsMono = getTaxBrackets(authorizationHeader);
                     Mono<List<LeaveDto>> leavesMono = getLeaves(employeeDetails.employeeId(), payrollRequestDto.getPayPeriodStartDate(), payrollRequestDto.getPayPeriodEndDate(), authorizationHeader);
 
@@ -148,29 +153,49 @@ public class PayrollService {
     }
 
     private BigDecimal calculateGrossPay(EmployeeDetailsDto employeeDetails, Integer totalHoursWorked, long nonWorkingDays, LocalDate startDate, LocalDate endDate, List<LeaveDto> leaves) {
-        long paidLeaveDays = leaves.stream()
-                .filter(leave -> "PAID".equalsIgnoreCase(leave.status()))
-                .filter(leave -> !leave.startDate().isAfter(endDate) && !leave.endDate().isBefore(startDate))
-                .mapToLong(leave -> {
-                    LocalDate effectiveStartDate = leave.startDate().isBefore(startDate) ? startDate : leave.startDate();
-                    LocalDate effectiveEndDate = leave.endDate().isAfter(endDate) ? endDate : leave.endDate();
-                    return ChronoUnit.DAYS.between(effectiveStartDate, effectiveEndDate) + 1;
-                })
-                .sum();
+        // Convert worked hours to equivalent days (assuming 9 hrs = 1 day) 8hrs work + 1hr break
+        BigDecimal workedDays = BigDecimal.valueOf(totalHoursWorked)
+                .divide(BigDecimal.valueOf(9), 2, RoundingMode.HALF_UP);
 
+        // Total calendar days in the pay period
+        BigDecimal totalCalendarDays = BigDecimal.valueOf(
+                ChronoUnit.DAYS.between(startDate, endDate) + 1
+        );
+
+        // Count of weekends/holidays
+        BigDecimal nonWorkingCount = BigDecimal.valueOf(nonWorkingDays);
+
+        // Final payable days (formula)
+        BigDecimal payableDays = nonWorkingCount.add(workedDays);
+
+        // Ensure payableDays is between 0 and totalCalendarDays
+        if (payableDays.compareTo(BigDecimal.ZERO) < 0) {
+            payableDays = BigDecimal.ZERO;
+        } else if (payableDays.compareTo(totalCalendarDays) > 0) {
+            payableDays = totalCalendarDays;
+        }
+
+        // Compute gross pay based on available rate
         if (employeeDetails.hourlyRate() != null) {
-            // Assume 8 hours per paid leave day for hourly employees
-            BigDecimal totalPaidLeaveHours = BigDecimal.valueOf(paidLeaveDays * 8);
-            BigDecimal totalHours = BigDecimal.valueOf(totalHoursWorked).add(totalPaidLeaveHours);
-            return employeeDetails.hourlyRate().multiply(totalHours);
+            return employeeDetails.hourlyRate().multiply(BigDecimal.valueOf(totalHoursWorked));
+
         } else if (employeeDetails.dailyRate() != null) {
-            long totalDaysInPeriod = ChronoUnit.DAYS.between(startDate, endDate) + 1;
-            long workingDaysInPeriod = totalDaysInPeriod - nonWorkingDays;
-            // Paid leave days count as working days for daily rate employees
-            long grossPayDays = workingDaysInPeriod;
-            return employeeDetails.dailyRate().multiply(BigDecimal.valueOf(grossPayDays));
+            return employeeDetails.dailyRate().multiply(payableDays);
+
+        } else if (employeeDetails.weeklyRate() != null) {
+            BigDecimal weeks = payableDays.divide(BigDecimal.valueOf(7), 2, RoundingMode.HALF_UP);
+            return employeeDetails.weeklyRate().multiply(weeks);
+
+        } else if (employeeDetails.monthlyRate() != null) {
+            BigDecimal months = payableDays.divide(BigDecimal.valueOf(30), 2, RoundingMode.HALF_UP);
+            return employeeDetails.monthlyRate().multiply(months);
+
+        } else if (employeeDetails.yearlyRate() != null) {
+            BigDecimal years = payableDays.divide(BigDecimal.valueOf(365), 4, RoundingMode.HALF_UP);
+            return employeeDetails.yearlyRate().multiply(years);
+
         } else {
-            throw new BadRequestException("Employee must have either an hourly or daily rate set.");
+            throw new BadRequestException("Employee must have at least one rate set.");
         }
     }
 
@@ -299,10 +324,11 @@ public class PayrollService {
                 .collectList();
     }
 
-    private Mono<Long> getNonWorkingDays(LocalDate startDate, LocalDate endDate) {
+    private Mono<Long> getNonWorkingDays(LocalDate startDate, LocalDate endDate, String authorizationHeader) {
         String uri = String.format("%s/non-working-days?startDate=%s&endDate=%s", holidayServiceUri, startDate, endDate);
         return webClient.get()
                 .uri(uri)
+                .header("Authorization", authorizationHeader)
                 .retrieve()
                 .onStatus(status -> status.isError(), response -> handleServiceError(response, "Holiday"))
                 .bodyToFlux(HolidayDto.class)
